@@ -1,12 +1,16 @@
 const {Sequelize} = require('sequelize');
+const dotenv = require("dotenv").config()
 
 module.exports = new Sequelize(
-    'telega_bot',
-    'root',
-    'root',
+    dotenv.parsed?.MYSQL_DB_NAME,
+    dotenv.parsed?.MYSQL_USERNAME,
+    dotenv.parsed?.MYSQL_PASSWORD,
     {
-        host: '5.188.128.98',
-        port: '6432',
-        dialect: 'postgres'
+        host: 'localhost',
+        port: '3306',
+        dialect: 'mysql',
+        define: {
+            timestamps: false
+        }
     }
 )
