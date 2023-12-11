@@ -29,6 +29,7 @@ const start = async () => {
         const text = msg.text;
         const chatId = msg.chat.id;
         let messageOutput = "";
+        const url = "https://job.hi-tech.md/";
         try {
             if (text === '/start') {
 
@@ -44,47 +45,91 @@ const start = async () => {
                 const jobLocationsBtns = new Array();
 
                 jobLocations.forEach((item) => {
-                   jobLocationsBtns.push({ text: item.location, callback_data: item.id });
+                   jobLocationsBtns.push({ text: item.location, callback_data: JSON.stringify({item_id:item.id,callback:'jobLocation'}) });
                 })
 
                 const chunkSize = 3;
                 const chunks = [];
 
                 for (let i = 0; i < jobLocationsBtns.length; i += chunkSize) {
-                const chunk = jobLocationsBtns.slice(i, i + chunkSize);
-                chunks.push(chunk);
+                    const chunk = jobLocationsBtns.slice(i, i + chunkSize);
+                    chunks.push(chunk);
                 }
-
                 return await bot.sendMessage(chatId,  'Выберите локацию:', jobLocationsOptions(chunks))
-
             }
             if (text === '/contacts') {
                 await bot.sendLocation(chatId, '46.841767', '29.620788')
                 return bot.sendMessage(chatId,  `Вы можете нас найти по адресу`);
             }
             if (text === '/cv') {
-                return await bot.sendMessage(chatId, '✅🚀 Отправить CV', applyJob())
+                return await bot.sendMessage(chatId, '✅🚀 Отправить CV', applyJob(url))
             }
 
             return bot.sendMessage(chatId, 'Такой команды не существует!');
         } catch (e) {
             return bot.sendMessage(chatId, 'Произошла какая-то ошибка!');
         }
-
     })
 
     bot.on('callback_query', async msg => {
-        const data = msg.data;
+        const data = JSON.parse(msg.data);
         const chatId = msg.message.chat.id;
-        const jobsByLocation = await Job.findAll({ where: {status:'active' ,location_id: data} ,raw: true})
-        const jobs = new Array();
+        const dateText = msg.message.date.text;
+        
+        if(data.callback === 'jobLocation'){
 
-        jobsByLocation.forEach((item) => {
-            jobs.push('✅ '+ item.title);
-        })
+            const jobCategories = await JobCategories.findAll( {where:{ id: data.item_id },include: Job,raw: true })
+            const jobCategoriesBtns = new Array();
+            console.log(jobCategories)
+            jobCategories.forEach((item) => {
+                jobCategoriesBtns.push({ text: item.name, callback_data: JSON.stringify({item_id:item.id,callback:'jobCategories'})});
+            })
 
-        await bot.sendMessage(chatId,  '<b><i>🔥Актуальные вакансии:</i></b>\n\n' + jobs.join('\n\n'),{parse_mode:'HTML'})
-        return await bot.sendMessage(chatId, '🚀 Отправьте CV и мы с вами обязательно свяжемся',applyJob())
+            const chunkSize = 2;
+            const chunks = [];
+
+            for (let i = 0; i < jobCategoriesBtns.length; i += chunkSize) {
+                const chunk = jobCategoriesBtns.slice(i, i + chunkSize);
+                chunks.push(chunk);
+            }
+            
+            return await bot.sendMessage(chatId,  '🔥Актуальные вакансии:\n\n', jobOptions(chunks) )
+        }
+        if(data.callback === 'jobCategories'){
+            const jobApply = await Job.findAll({raw: true})
+            const jobApplyBtns = new Array();
+
+            jobApply.forEach((item) => {
+                jobApplyBtns.push({ text: item.name, callback_data: JSON.stringify({item_id:item.id,callback:'jobCategories'})});
+            })
+
+            const chunkSize = 2;
+            const chunks = [];
+
+            for (let i = 0; i < jobCategoriesBtns.length; i += chunkSize) {
+                const chunk = jobCategoriesBtns.slice(i, i + chunkSize);
+                chunks.push(chunk);
+            }
+            
+            return await bot.sendMessage(chatId,  '🔥Актуальные вакансии:\n\n', jobOptions(chunks) )
+        }
+
+        if(data.callback === 'jobApply'){
+
+            jobLocations.forEach((item) => {
+                jobLocationsBtns.push({ text: item.location, callback_data: JSON.stringify({item_id:item.id,callback:'jobLocation'}) });
+            })
+
+            const chunkSize = 3;
+            const chunks = [];
+
+            for (let i = 0; i < jobLocationsBtns.length; i += chunkSize) {
+                const chunk = jobLocationsBtns.slice(i, i + chunkSize);
+                chunks.push(chunk);
+            }
+            return await bot.sendMessage(chatId,  'Выберите локацию:', jobLocationsOptions(chunks))
+        }
+        
         // const user = await UserTg.findOne({chatId})
     
         // user.wrong += 1;
