@@ -10,6 +10,8 @@ const bot = new TelegramApi(token, {polling: true})
 
 const chats = {}
 
+const url = "https://job.hi-tech.md/job/";
+
 const start = async () => {
    
     try {
@@ -20,7 +22,8 @@ const start = async () => {
     }
 
     bot.setMyCommands([
-        {command: '/start', description: 'старт'},
+        {command: '/start', description: 'Старт'},
+        {command: '/info', description: 'Чего тебе?'},
         {command: '/contacts', description: 'Наше местоположение'},
         {command: '/cv', description: 'Отправить CV'},
     ])
@@ -29,7 +32,6 @@ const start = async () => {
         const text = msg.text;
         const chatId = msg.chat.id;
         let messageOutput = "";
-        const url = "https://job.hi-tech.md/";
         try {
             if (text === '/start') {
 
@@ -62,7 +64,7 @@ const start = async () => {
                 return bot.sendMessage(chatId,  `Вы можете нас найти по адресу`);
             }
             if (text === '/cv') {
-                return await bot.sendMessage(chatId, '✅🚀 Отправить CV', applyJob(url))
+                return await bot.sendMessage(chatId, '✅🚀 Отправить CV', applyJob('✅🚀 Отправить CV','https://job.hi-tech.md/job/nichego-ne-podoshlo-pridnestrove'))
             }
 
             return bot.sendMessage(chatId, 'Такой команды не существует!');
@@ -75,14 +77,18 @@ const start = async () => {
         const data = JSON.parse(msg.data);
         const chatId = msg.message.chat.id;
         const dateText = msg.message.date.text;
-        
         if(data.callback === 'jobLocation'){
 
-            const jobCategories = await JobCategories.findAll( {where:{ id: data.item_id },include: Job,raw: true })
+            // const jobCategories = await JobCategories.findAll({ include: [{
+            //     model: Job,
+            //     where: {location_id: id}
+            //    }],raw: true })
+            const [jobCategories,metadata] = await sequelize.query(
+                "SELECT DISTINCT jc.id,jc.name,jc.created_at,jc.updated_at FROM `job_categories` AS jc WHERE jc.id IN (SELECT j.category_id FROM `jobs` as j WHERE j.location_id = " + data.item_id + " and status = 'active')"); 
             const jobCategoriesBtns = new Array();
-            console.log(jobCategories)
+           
             jobCategories.forEach((item) => {
-                jobCategoriesBtns.push({ text: item.name, callback_data: JSON.stringify({item_id:item.id,callback:'jobCategories'})});
+                jobCategoriesBtns.push({ text: item.name, callback_data: JSON.stringify({category_id:item.id,callback:'jobCategory'})});
             })
 
             const chunkSize = 2;
@@ -92,44 +98,22 @@ const start = async () => {
                 const chunk = jobCategoriesBtns.slice(i, i + chunkSize);
                 chunks.push(chunk);
             }
-            
+
             return await bot.sendMessage(chatId,  '🔥Актуальные вакансии:\n\n', jobOptions(chunks) )
-        }
-        if(data.callback === 'jobCategories'){
-            const jobApply = await Job.findAll({raw: true})
-            const jobApplyBtns = new Array();
-
-            jobApply.forEach((item) => {
-                jobApplyBtns.push({ text: item.name, callback_data: JSON.stringify({item_id:item.id,callback:'jobCategories'})});
-            })
-
-            const chunkSize = 2;
-            const chunks = [];
-
-            for (let i = 0; i < jobCategoriesBtns.length; i += chunkSize) {
-                const chunk = jobCategoriesBtns.slice(i, i + chunkSize);
-                chunks.push(chunk);
-            }
-            
-            return await bot.sendMessage(chatId,  '🔥Актуальные вакансии:\n\n', jobOptions(chunks) )
-        }
-
-        if(data.callback === 'jobApply'){
-
-            jobLocations.forEach((item) => {
-                jobLocationsBtns.push({ text: item.location, callback_data: JSON.stringify({item_id:item.id,callback:'jobLocation'}) });
-            })
-
-            const chunkSize = 3;
-            const chunks = [];
-
-            for (let i = 0; i < jobLocationsBtns.length; i += chunkSize) {
-                const chunk = jobLocationsBtns.slice(i, i + chunkSize);
-                chunks.push(chunk);
-            }
-            return await bot.sendMessage(chatId,  'Выберите локацию:', jobLocationsOptions(chunks))
         }
         
+        if(data.callback === 'jobCategory'){
+            const [ jobs,metadata ] = await sequelize.query(
+                "SELECT DISTINCT j.id,j.title,j.slug FROM `jobs` as j WHERE j.category_id = " + data.category_id + " AND status = 'active'"); 
+            const jobsBtns = new Array();
+           
+            jobs.forEach((item) => {
+                jobsBtns.push([{ text: item.title, web_app: {url : (url + item.slug)}}]);
+            })
+            console.log(jobsBtns)
+            return await bot.sendMessage(chatId,  '✅🚀🔥Выберите вакансию:\n\n', jobOptions(jobsBtns));
+        }
+
         // const user = await UserTg.findOne({chatId})
     
         // user.wrong += 1;
