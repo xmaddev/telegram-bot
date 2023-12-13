@@ -34,5 +34,3 @@ app.post('/webhook', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Express server is listening`);
 });
-
-// https://api.telegram.org/bot6662880620:AAEAg9XGibc1G8wB7FPpZkYHgGxxaW0O9dU/setWebhook?url=https://casta.md/bots/webhook-tg-13142314.php

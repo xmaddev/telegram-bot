@@ -1,10 +1,10 @@
 const TelegramApi = require('node-telegram-bot-api')
 const sequelize = require('./db');
-const dotenv = require("dotenv").config()
+require("dotenv").config()
 const {jobLocationsOptions, applyJob, jobOptions} = require('./options')
 const {UserTg , Job ,JobCategories, JobLocations} = require('./models');
-
-const token =  dotenv.parsed.TELEGRAM_API_TOKEN
+const {TELEGRAM_API_TOKEN} = process.env;
+const token =  TELEGRAM_API_TOKEN
 
 const bot = new TelegramApi(token, {polling: true})
 
