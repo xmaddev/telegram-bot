@@ -67,7 +67,7 @@ const start = async () => {
                 return await bot.sendMessage(chatId, '✅🚀 Отправить CV', applyJob('✅🚀 Отправить CV','https://job.hi-tech.md/job/nichego-ne-podoshlo-pridnestrove'))
             }
 
-            return bot.sendMessage(chatId, 'Такой команды не существует!');
+            return await bot.sendMessage(chatId, 'Такой команды не существует!');
         } catch (e) {
             return bot.sendMessage(chatId, 'Произошла какая-то ошибка!');
         }
@@ -77,6 +77,7 @@ const start = async () => {
         const data = JSON.parse(msg.data);
         const chatId = msg.message.chat.id;
         const dateText = msg.message.date.text;
+        const msgId = msg.message.message_id;
         if(data.callback === 'jobLocation'){
 
             // const jobCategories = await JobCategories.findAll({ include: [{
@@ -98,7 +99,7 @@ const start = async () => {
                 const chunk = jobCategoriesBtns.slice(i, i + chunkSize);
                 chunks.push(chunk);
             }
-
+            await bot.deleteMessage(chatId, msgId)
             return await bot.sendMessage(chatId,  '🔥Актуальные вакансии:\n\n', jobOptions(chunks) )
         }
         
@@ -110,7 +111,7 @@ const start = async () => {
             jobs.forEach((item) => {
                 jobsBtns.push([{ text: item.title, web_app: {url : (url + item.slug)}}]);
             })
-            console.log(jobsBtns)
+            await bot.deleteMessage(chatId, msgId)
             return await bot.sendMessage(chatId,  '✅🚀🔥Выберите вакансию:\n\n', jobOptions(jobsBtns));
         }
 
@@ -119,6 +120,7 @@ const start = async () => {
         // user.wrong += 1;
 
         // await user.save();
+        return true;
     })
 }
 
