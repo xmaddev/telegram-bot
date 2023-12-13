@@ -1,10 +1,10 @@
 const {Sequelize} = require('sequelize');
-const dotenv = require("dotenv").config()
-
+require("dotenv").config()
+const {MYSQL_DB_NAME,MYSQL_USERNAME,MYSQL_PASSWORD} = process.env;
 module.exports = new Sequelize(
-    dotenv.parsed?.MYSQL_DB_NAME,
-    dotenv.parsed?.MYSQL_USERNAME,
-    dotenv.parsed?.MYSQL_PASSWORD,
+    MYSQL_DB_NAME,
+    MYSQL_USERNAME,
+    MYSQL_PASSWORD,
     {
         host: 'localhost',
         port: '3306',

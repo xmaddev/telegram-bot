@@ -68,7 +68,7 @@ const start = async () => {
             }
 
             return await bot.sendMessage(chatId, 'Такой команды не существует!');
-        } catch (e) {
+        } catch (e) {   
             return bot.sendMessage(chatId, 'Произошла какая-то ошибка!');
         }
     })

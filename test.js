@@ -3,9 +3,9 @@ const express = require("express");
 const TelegramBot = require("node-telegram-bot-api");
 
 
-const {TOKEN, PORT} = process.env;
+const {TELEGRAM_API_TOKEN, PORT} = process.env;
 
-const bot = new TelegramBot(TOKEN);
+const bot = new TelegramBot(TELEGRAM_API_TOKEN);
 
 const app = express();
 app.use(express.json());
@@ -34,3 +34,5 @@ app.post('/webhook', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Express server is listening`);
 });
+
+// https://api.telegram.org/bot6662880620:AAEAg9XGibc1G8wB7FPpZkYHgGxxaW0O9dU/setWebhook?url=https://casta.md/bots/webhook-tg-13142314.php
